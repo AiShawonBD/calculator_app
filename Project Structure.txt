@@ -1,0 +1,22 @@
+calculator-app/
+│
+├── docker/                     # Docker-related files
+│   ├── Dockerfile
+│   └── nginx.conf
+│
+├── template/                   # Static front-end files
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+│
+├── k8s/                        # Kubernetes manifests
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── ingress.yaml            # Optional
+│
+├── jenkins/                    # Jenkins pipeline
+│   └── Jenkinsfile
+│
+├── .dockerignore
+├── .gitignore
+└── README.md

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Modern Calculator</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c1c1c);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      color: #fff;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .calculator {
+      background: rgba(0, 0, 0, 0.9);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      width: 100%;
+      max-width: 350px;
+    }
+
+    .display {
+      background: #111;
+      color: #0f0;
+      font-size: 2em;
+      padding: 20px;
+      text-align: right;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      padding: 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 10px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover { background: #555; }
+    .operator { background: #fe9241; }
+    .operator:hover { background: #ff9f59; }
+    .equal { background: #4caf50; }
+    .equal:hover { background: #45a049; }
+    .clear { background: #f44336; }
+    .clear:hover { background: #e53935; }
+
+    footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #ccc;
+      text-align: center;
+    }
+
+    @media (max-width: 400px) {
+      .display { font-size: 1.5em; padding: 15px; }
+      button { padding: 15px; font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calculator">
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button onclick="clearDisplay()" class="clear">C</button>
+      <button onclick="backspace()">⌫</button>
+      <button onclick="append('%')">%</button>
+      <button onclick="append('/')" class="operator">÷</button>
+
+      <button onclick="append('7')">7</button>
+      <button onclick="append('8')">8</button>
+      <button onclick="append('9')">9</button>
+      <button onclick="append('*')" class="operator">×</button>
+
+      <button onclick="append('4')">4</button>
+      <button onclick="append('5')">5</button>
+      <button onclick="append('6')">6</button>
+      <button onclick="append('-')" class="operator">−</button>
+
+      <button onclick="append('1')">1</button>
+      <button onclick="append('2')">2</button>
+      <button onclick="append('3')">3</button>
+      <button onclick="append('+')" class="operator">+</button>
+
+      <button onclick="append('0')">0</button>
+      <button onclick="append('.')">.</button>
+      <button onclick="calculate()" class="equal">=</button>
+    </div>
+  </div>
+
+  <footer>
+    Calculator Version : 1 - Design and Development by: <strong>Ariful Islam Shawon</strong>
+  </footer>
+
+  <script>
+    let display = document.getElementById('display');
+    let currentInput = '';
+
+    function append(value) {
+      if (currentInput === '0' && value !== '.') {
+        currentInput = value;
+      } else {
+        currentInput += value;
+      }
+      updateDisplay();
+    }
+
+    function clearDisplay() {
+      currentInput = '';
+      updateDisplay();
+    }
+
+    function backspace() {
+      currentInput = currentInput.slice(0, -1);
+      updateDisplay();
+    }
+
+    function calculate() {
+      try {
+        currentInput = eval(currentInput).toString();
+      } catch (e) {
+        currentInput = 'Error';
+      }
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      display.textContent = currentInput || '0';
+    }
+
+    // ✅ Keyboard Support
+    document.addEventListener('keydown', function(e) {
+      const key = e.key;
+      if (!isNaN(key) || ['+', '-', '*', '/', '%', '.'].includes(key)) {
+        append(key);
+      } else if (key === 'Enter' || key === '=') {
+        calculate();
+      } else if (key === 'Backspace') {
+        backspace();
+      } else if (key.toLowerCase() === 'c') {
+        clearDisplay();
+      }
+    });
+  </script>
+
+</body>
+</html>
