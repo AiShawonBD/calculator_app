@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "yourdockerhubusername/calculator-app"
-        DOCKER_CREDENTIALS_ID = "docker-hub-credentials-id"   // Add your Docker Hub credentials in Jenkins
+        DOCKER_IMAGE = "aishawon/calculator-app"
+        DOCKER_CREDENTIALS_ID = "docker-creds"   // Add your Docker Hub credentials in Jenkins
         KUBE_CONFIG_CREDENTIAL_ID = "kubeconfig-credentials-id" // Add kubeconfig file in Jenkins credentials
     }
 
