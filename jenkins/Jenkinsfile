@@ -2,60 +2,58 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "aishawon/calculator-app:latest"
-        REGISTRY_CREDENTIALS = 'dockerhub-credentials' // Replace with your Jenkins credentials ID
-        KUBECONFIG_CREDENTIALS = 'kubeconfig'           // Replace with your kubeconfig credentials ID
+        IMAGE_NAME = 'aishawon/calculator-app'
+        IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // Unique tag per build
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/AiShawonBD/calculator_app.git', branch: 'main'
+                echo '🔄 Checking out source code...'
+                checkout scm
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                echo '🔐 Logging in to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh 'docker build -t $DOCKER_IMAGE -f docker/Dockerfile .'
-                }
+                echo '🐳 Building Docker image...'
+                sh "docker build -t ${env.IMAGE_TAG} ."
+                sh "docker image ls"
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    script {
-                        sh '''
-                            echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
-                            docker push $DOCKER_IMAGE
-                        '''
-                    }
-                }
+                echo '🚀 Pushing Docker image to Docker Hub...'
+                sh "docker push ${env.IMAGE_TAG}"
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Pipeline Success') {
             steps {
-                withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIALS, variable: 'KUBECONFIG_FILE')]) {
-                    script {
-                        sh '''
-                            export KUBECONFIG=$KUBECONFIG_FILE
-                            kubectl apply -f k8s/deployment.yaml
-                            kubectl apply -f k8s/service.yaml
-                        '''
-                    }
-                }
+                echo '🎉 Pipeline has completed successfully! All stages passed. 🎉'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline completed successfully!'
+            echo '✅ Build & deployment successful.'
         }
         failure {
-            echo '❌ Pipeline failed. Please check errors.'
+            echo '❌ Build or deployment failed.'
+        }
+        always {
+            echo '🔁 Pipeline execution finished.'
         }
     }
 }
