@@ -33,6 +33,14 @@ pipeline {
                 sh "docker push ${env.IMAGE_TAG}"
             }
         }
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
+                '''
+            }
+        }
 
         stage('Pipeline Success') {
             steps {
