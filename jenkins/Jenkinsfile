@@ -4,7 +4,6 @@ pipeline {
     environment {
         IMAGE_NAME = 'aishawon/calculator-app'
         IMAGE_TAG = "${IMAGE_NAME}:${env.GIT_COMMIT}"
-        KUBE_CONFIG_CREDENTIAL_ID = "kubeconfig-credentials-id" // Add kubeconfig file in Jenkins credentials
     }
 
     stages {
