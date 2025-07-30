@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'aishawon/calculator-app'
-        IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // BUILD_NUMBER ensures unique tag for each build
+        IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // Unique tag per build
     }
 
     stages {
@@ -38,24 +38,24 @@ pipeline {
             }
         }
 
-
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo '☸️ Deploying to Kubernetes...'
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                        export KUBECONFIG=$KUBECONFIG
+                        kubectl apply -f k8s/deployment.yaml --validate=false
+                        kubectl apply -f k8s/service.yaml --validate=false
+                    '''
+                }
+            }
+        }
 
         stage('Pipeline Success') {
             steps {
                 echo '🎉 Pipeline has completed successfully! All stages passed. 🎉'
             }
         }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo '☸️ Deploying to Kubernetes...'
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh 'kubectl apply -f k8s/deployment.yaml --validate=false'
-                    sh 'kubectl apply -f k8s/service.yaml --validate=false'
-                    sh 'kubectl rollout status deployment/your-deployment-name'
-                }
-            }
-        } 
     }
 
     post {
