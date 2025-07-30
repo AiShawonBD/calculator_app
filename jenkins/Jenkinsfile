@@ -43,12 +43,14 @@ pipeline {
                 echo '☸️ Deploying to Kubernetes...'
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh '''
-                        export KUBECONFIG=$KUBECONFIG
-                        kubectl apply -f k8s/deployment.yaml --validate=false
-                        kubectl apply -f k8s/service.yaml --validate=false
+                    export KUBECONFIG=$KUBECONFIG
+                    kubectl config use-context minikube
+                    kubectl get nodes
+                    kubectl apply -f k8s/deployment.yaml --validate=false
+                    kubectl apply -f k8s/service.yaml --validate=false
                     '''
                 }
-            }
+
         }
 
         stage('Pipeline Success') {
