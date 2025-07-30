@@ -3,18 +3,20 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'aishawon/calculator-app'
-        IMAGE_TAG = "${IMAGE_NAME}:${env.GIT_COMMIT}"
+        IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // BUILD_NUMBER ensures unique tag for each build
     }
 
     stages {
         stage('Checkout') {
             steps {
+                echo '🔄 Checking out source code...'
                 checkout scm
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
+                echo '🔐 Logging in to Docker Hub...'
                 withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
                 }
@@ -23,6 +25,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
+                echo '🐳 Building Docker image...'
                 sh "docker build -t ${env.IMAGE_TAG} ."
                 sh "docker image ls"
             }
@@ -30,12 +33,14 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
+                echo '🚀 Pushing Docker image to Docker Hub...'
                 sh "docker push ${env.IMAGE_TAG}"
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
+                echo '☸️ Deploying to Kubernetes...'
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh 'kubectl apply -f k8s/deployment.yaml --validate=false'
                     sh 'kubectl apply -f k8s/service.yaml --validate=false'
@@ -47,6 +52,18 @@ pipeline {
             steps {
                 echo '🎉 Pipeline has completed successfully! All stages passed. 🎉'
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build & deployment successful.'
+        }
+        failure {
+            echo '❌ Build or deployment failed.'
+        }
+        always {
+            echo '🔁 Pipeline execution finished.'
         }
     }
 }
