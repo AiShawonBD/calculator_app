@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'aishawon/calculator-app'
         IMAGE_TAG = "${IMAGE_NAME}:${env.GIT_COMMIT}"
+        KUBE_CONFIG_CREDENTIAL_ID = "kubeconfig-credentials-id" // Add kubeconfig file in Jenkins credentials
     }
 
     stages {
@@ -33,12 +34,15 @@ pipeline {
                 sh "docker push ${env.IMAGE_TAG}"
             }
         }
-        stage('Deploy to Kubernetes') {
-            steps {
-                sh '''
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                '''
+
+        stages {
+            stage('Deploy to Kubernetes') {
+                steps {
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh 'kubectl apply -f k8s/deployment.yaml --validate=false'
+                        sh 'kubectl apply -f k8s/service.yaml --validate=false'
+                    }
+                }
             }
         }
 
