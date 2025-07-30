@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "aishawon/calculator-app"
-        DOCKER_CREDENTIALS_ID = "docker-creds"   // Add your Docker Hub credentials in Jenkins
-        KUBE_CONFIG_CREDENTIAL_ID = "kubeconfig-credentials-id" // Add kubeconfig file in Jenkins credentials
+        IMAGE_NAME = 'aishawon/calculator-app'
+        IMAGE_TAG = "${IMAGE_NAME}:${env.GIT_COMMIT}"
     }
 
     stages {
@@ -14,34 +13,73 @@ pipeline {
             }
         }
 
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                }
+                echo 'Login successful'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}", "-f docker/Dockerfile .")
-                }
+                sh 'docker build -t $IMAGE_TAG .'
+                sh 'docker image ls'
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push()
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push('latest')
-                    }
+                sh 'docker push $IMAGE_TAG'
+            }
+        }
+
+        stage('Deploy to Local K8s') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    sh '''
+                        export KUBECONFIG=$KUBECONFIG_FILE
+                        sed -i 's|image: .*|image: '${IMAGE_TAG}'|' k8s/deployment.yaml
+                        kubectl apply -f k8s/
+                        kubectl get all
+                    '''
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Run Acceptance Test') {
             steps {
-                withCredentials([file(credentialsId: KUBE_CONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
-                    sh """
-                    kubectl --kubeconfig=$KUBECONFIG set image deployment/calculator-deployment calculator-container=${DOCKER_IMAGE}:${env.BUILD_NUMBER} --record
-                    kubectl --kubeconfig=$KUBECONFIG rollout status deployment/calculator-deployment
-                    """
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    sh '''
+                        export KUBECONFIG=$KUBECONFIG_FILE
+                        
+                        # Wait up to 120 seconds for pod to be running
+                        for i in $(seq 1 12); do
+                            POD_STATUS=$(kubectl get pods -l app=flask-app -o jsonpath='{.items[0].status.phase}')
+                            echo "Pod status: $POD_STATUS"
+                            if [ "$POD_STATUS" = "Running" ]; then
+                                break
+                            fi
+                            sleep 10
+                        done
+                        
+                        POD_NAME=$(kubectl get pods -l app=flask-app -o jsonpath='{.items[0].metadata.name}')
+                        echo "Fetching logs from pod: $POD_NAME"
+                        kubectl logs $POD_NAME
+                    '''
                 }
             }
         }
+        stage('Pipeline Success') {
+            steps {
+                echo '🎉 Pipeline has completed successfully! All stages passed. 🎉'
+            }
+        }
+
     }
 }
+
+
+
+
