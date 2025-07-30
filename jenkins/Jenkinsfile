@@ -2,73 +2,60 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'aishawon/calculator-app'
-        IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // Unique tag per build
+        DOCKER_IMAGE = "aishawon/calculator-app:latest"
+        REGISTRY_CREDENTIALS = 'dockerhub-credentials' // Replace with your Jenkins credentials ID
+        KUBECONFIG_CREDENTIALS = 'kubeconfig'           // Replace with your kubeconfig credentials ID
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                echo '🔄 Checking out source code...'
-                checkout scm
-            }
-        }
-
-        stage('Login to Docker Hub') {
-            steps {
-                echo '🔐 Logging in to Docker Hub...'
-                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
-                }
+                git url: 'https://github.com/AiShawonBD/calculator_app.git', branch: 'main'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Building Docker image...'
-                sh "docker build -t ${env.IMAGE_TAG} ."
-                sh "docker image ls"
+                script {
+                    sh 'docker build -t $DOCKER_IMAGE -f docker/Dockerfile .'
+                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                echo '🚀 Pushing Docker image to Docker Hub...'
-                sh "docker push ${env.IMAGE_TAG}"
+                withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    script {
+                        sh '''
+                            echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+                            docker push $DOCKER_IMAGE
+                        '''
+                    }
+                }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                echo '☸️ Deploying to Kubernetes...'
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh '''
-                    export KUBECONFIG=$KUBECONFIG
-                    kubectl config use-context minikube
-                    kubectl get nodes
-                    kubectl apply -f k8s/deployment.yaml --validate=false
-                    kubectl apply -f k8s/service.yaml --validate=false
-                    '''
+                withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIALS, variable: 'KUBECONFIG_FILE')]) {
+                    script {
+                        sh '''
+                            export KUBECONFIG=$KUBECONFIG_FILE
+                            kubectl apply -f k8s/deployment.yaml
+                            kubectl apply -f k8s/service.yaml
+                        '''
+                    }
                 }
-
-        }
-
-        stage('Pipeline Success') {
-            steps {
-                echo '🎉 Pipeline has completed successfully! All stages passed. 🎉'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build & deployment successful.'
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
-            echo '❌ Build or deployment failed.'
-        }
-        always {
-            echo '🔁 Pipeline execution finished.'
+            echo '❌ Pipeline failed. Please check errors.'
         }
     }
 }
