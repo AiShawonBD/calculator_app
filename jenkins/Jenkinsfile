@@ -3,7 +3,10 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'aishawon/calculator-app'
-        IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // Unique tag per build
+        def IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"//This tag will crrete Image name:builder_number:and First 7 characters of the Git commit SHA
+
+        //IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // Unique tag per build
+
     }
 
     stages {

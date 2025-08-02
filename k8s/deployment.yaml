@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: calculator-app
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: calculator
@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: calculator
-        image: aishawon/calculator-app:latest
+        image: aishawon/calculator-app:20
         ports:
         - containerPort: 80
