@@ -3,13 +3,10 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'aishawon/calculator-app'
-        def IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"//This tag will crrete Image name:builder_number:and First 7 characters of the Git commit SHA
-
-        //IMAGE_TAG = "${IMAGE_NAME}:${env.BUILD_NUMBER}" // Unique tag per build
-
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo '🔄 Checking out source code...'
@@ -17,10 +14,33 @@ pipeline {
             }
         }
 
+        stage('Set Image Tag') {
+            steps {
+                script {
+                    // Get short Git commit SHA safely
+                    def COMMIT = sh(
+                        script: "git rev-parse --short HEAD",
+                        returnStdout: true
+                    ).trim()
+
+                    // Create image tag
+                    env.IMAGE_TAG = "${env.IMAGE_NAME}:${env.BUILD_NUMBER}-${COMMIT}"
+
+                    echo "📌 Image Tag: ${env.IMAGE_TAG}"
+                }
+            }
+        }
+
         stage('Login to Docker Hub') {
             steps {
                 echo '🔐 Logging in to Docker Hub...'
-                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-creds',
+                        usernameVariable: 'USERNAME',
+                        passwordVariable: 'PASSWORD'
+                    )
+                ]) {
                     sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
                 }
             }
@@ -29,7 +49,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Building Docker image...'
-                sh "docker build -t ${env.IMAGE_TAG} ./docker"
+                sh "docker build -t ${env.IMAGE_TAG} -f docker/Dockerfile ."
                 sh "docker image ls"
             }
         }
@@ -37,13 +57,15 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 echo '🚀 Pushing Docker image to Docker Hub...'
-                sh "docker push ${env.IMAGE_TAG}"
+                retry(2) {
+                    sh "docker push ${env.IMAGE_TAG}"
+                }
             }
         }
 
         stage('Pipeline Success') {
             steps {
-                echo '🎉 Pipeline has completed successfully! All stages passed. 🎉'
+                echo '🎉 Pipeline has completed successfully! All stages passed.'
             }
         }
     }
