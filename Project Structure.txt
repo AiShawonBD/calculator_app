@@ -27,19 +27,3 @@ calculator-app/
 
 #Use docker build command:
 docker build -t aishawon.calculator-app:latest -f docker/Dockerfile .
-
-#Short Project Structure
-calculator-app/
-├── templates/                 # Static frontend files
-│   ├── index.html
-│   ├── style.css
-│   └── script.js
-│
-├── docker/                    # All Docker-related files
-│   ├── Dockerfile
-│   └── default.conf
-│
-├── docker-compose.yml         # Run app easily (optional but recommended)
-├── .dockerignore              # Ignore unnecessary files for Docker build
-├── .gitignore                 # Git ignore rules
-├── README.md                  # Project documentation
