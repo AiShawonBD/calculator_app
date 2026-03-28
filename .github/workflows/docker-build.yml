@@ -48,4 +48,7 @@ jobs:
         docker tag $IMAGE_TAG $IMAGE_NAME:latest
         docker push $IMAGE_NAME:latest
 
-        
+     # 7️⃣ Build success notification
+    - name: Build Successful
+      run: |
+        echo "🎉 Docker image build and push completed successfully! 🎉"
