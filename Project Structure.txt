@@ -1,30 +1,32 @@
 calculator-app/
 │
-├──.github/
-└──     ├──workflows/
-│           └── docker-build.yml
-├── docker/                     # Docker-related files
-│   ├── Dockerfile
-│   └── nginx.conf
+├── .github/
+│   └── workflows/
+│       └── docker-build.yml       # GitHub Actions workflow for Docker build & push
 │
-├── template/                   # Static front-end files
+├── docker/                        # Docker-related files
+│   ├── Dockerfile                  # App image definition
+│   └── default.conf                # Nginx / server config
+│
+├── k8s/                            # Kubernetes manifests
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── ingress.yaml                # Optional ingress configuration
+│
+├── jenkins/                        # Jenkins CI/CD pipeline
+│   └── Jenkinsfile
+│
+├── frontend/                       # Static front-end files (renamed from "template" for clarity)
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
-│
-├── k8s/                        # Kubernetes manifests
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   └── ingress.yaml            # Optional
-│
-├── jenkins/                    # Jenkins pipeline
-│   └── Jenkinsfile
 │
 ├── .dockerignore
 ├── .gitignore
 └── README.md
 
-
+#Use docker build command:
+docker build -t aishawon.calculator-app:latest -f docker/Dockerfile .
 
 #Short Project Structure
 calculator-app/
