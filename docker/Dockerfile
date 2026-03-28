@@ -1,17 +1,14 @@
-# Stage 1: Build Stage
-FROM alpine:latest AS build
-
-WORKDIR /app
-
-COPY ../templates/ ./
-
-# Stage 2: Production Stage
+# Use the official Nginx image as the base
 FROM nginx:alpine
 
-WORKDIR /usr/share/nginx/html
+# Remove default Nginx website
+RUN rm -rf /usr/share/nginx/html/*
 
-COPY --from=build /app/ ./
+# Copy your static files into Nginx's default directory
+COPY template/ /usr/share/nginx/html/
 
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-
+# Expose port 80 (default HTTP port)
 EXPOSE 80
+
+# Start Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]
