@@ -1,5 +1,8 @@
 calculator-app/
 │
+├──.github/
+└──     ├──workflows/
+│           └── docker-build.yml
 ├── docker/                     # Docker-related files
 │   ├── Dockerfile
 │   └── nginx.conf
