@@ -17,7 +17,7 @@ pipeline {
                     extensions: [],
                     userRemoteConfigs: [[
                         url: 'git@github.com:AiShawonBD/calculator_app.git', // Use SSH URL
-                        credentialsId: 'github-creds' // Your GitHub credentials ID in Jenkins
+                        credentialsId: 'github-credentials' // <-- use your actual credential ID
                     ]]
                 ])
             }
