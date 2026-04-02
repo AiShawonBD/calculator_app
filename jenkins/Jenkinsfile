@@ -9,15 +9,15 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo '🔄 Checking out private repo...'
+                echo '🔄 Checking out private repo via HTTPS...'
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/main']], // Replace if your default branch is not 'main'
+                    branches: [[name: '*/main']], // your branch
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [],
                     userRemoteConfigs: [[
-                        url: 'git@github.com:AiShawonBD/calculator_app.git', // Use SSH URL
-                        credentialsId: 'github-credentials' // <-- use your actual credential ID
+                        url: 'https://github.com/AiShawonBD/calculator_app.git',
+                        credentialsId: 'github-credentials'
                     ]]
                 ])
             }
